@@ -4,6 +4,8 @@ import './index.css';
 import App from './App';
 import FHIR from 'fhirclient';
 
+import { getPatient, getPatientImmunization } from './utils/panoramaClient';
+
 //import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -25,7 +27,12 @@ const smartLaunch = () => {
       console.log(client);
       client.request(client.user.fhirUser).then(practitioner => console.log(practitioner));
       client.request(`Patient/${client.patient.id}`).then(patient => console.log(patient));
-
+    })
+    .then(() => {
+      getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
+      getPatientImmunization(8362196).then(immunization => console.log('patient immunization from panorama api', immunization));
+    })
+    .then(() => {
       root.render(
         <React.StrictMode>
           <App />
