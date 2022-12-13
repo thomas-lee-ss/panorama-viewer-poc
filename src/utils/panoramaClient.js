@@ -30,11 +30,11 @@ function getPatient(id) {
   return get(url).then(data => data.client);
 }
 
-function getPatientImmunization(id) {
+function getPatientVaccination(id) {
   let url = baseURL + '/Immunization/Profile';
   let client = { id: id };
   let data = { client: client };
   return post(url, data).then(data => data.profile.immunizations);
 }
 
-export { getPatient, getPatientImmunization }
+export { getPatient, getPatientVaccination }

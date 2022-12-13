@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import FHIR from 'fhirclient';
 
-import { getPatient, getPatientImmunization } from './utils/panoramaClient';
+import { getPatient, getPatientVaccination } from './utils/panoramaClient';
 
 //import reportWebVitals from './reportWebVitals';
 
@@ -51,7 +51,7 @@ const smartLaunch = () => {
     })
     .then(() => {
       getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
-      getPatientImmunization(8362196).then(immunization => console.log('patient immunization from panorama api', immunization));
+      getPatientVaccination(8362196).then(vaccination => console.log('patient vaccination from panorama api', vaccination));
     })
     .then(() => {
       getKeycloakToken().then(data => console.log(data))
