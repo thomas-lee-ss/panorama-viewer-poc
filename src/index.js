@@ -16,6 +16,27 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 //);
 //const rootElement = document.getElementById('root');
 
+function getKeycloakToken() {
+  let url = 'http://localhost:8080/realms/cambianpanoramaviewer/protocol/openid-connect/token';
+
+  let body = new URLSearchParams({
+    'client_id': 'viewer',
+    'grant_type': 'password',
+    'username': 'thomas-lee',
+    'password': 'ThomasL@1121'
+  });
+
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      'Origin': 'http://localhost:3000'
+    },
+    body: body
+  })
+  .then(response => response.json());
+}
+
 const smartLaunch = () => {
   // Authorize application
   FHIR.oauth2
@@ -31,6 +52,9 @@ const smartLaunch = () => {
     .then(() => {
       getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
       getPatientImmunization(8362196).then(immunization => console.log('patient immunization from panorama api', immunization));
+    })
+    .then(() => {
+      getKeycloakToken().then(data => console.log(data))
     })
     .then(() => {
       root.render(
