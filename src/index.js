@@ -5,6 +5,7 @@ import App from './App';
 import FHIR from 'fhirclient';
 
 import { getPatient, getPatientVaccination } from './utils/panoramaClient';
+import { getToken, validateToken } from './utils/keycloakClient';
 
 //import reportWebVitals from './reportWebVitals';
 
@@ -15,27 +16,6 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 //  </React.StrictMode>
 //);
 //const rootElement = document.getElementById('root');
-
-function getKeycloakToken() {
-  let url = 'http://localhost:8080/realms/cambianpanoramaviewer/protocol/openid-connect/token';
-
-  let body = new URLSearchParams({
-    'client_id': 'viewer',
-    'grant_type': 'password',
-    'username': 'thomas-lee',
-    'password': 'ThomasL@1121'
-  });
-
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      'Origin': 'http://localhost:3000'
-    },
-    body: body
-  })
-  .then(response => response.json());
-}
 
 const smartLaunch = () => {
   // Authorize application
@@ -48,13 +28,38 @@ const smartLaunch = () => {
       console.log(client);
       client.request(client.user.fhirUser).then(practitioner => console.log(practitioner));
       client.request(`Patient/${client.patient.id}`).then(patient => console.log(patient));
+
+      return client;
+    })
+    .then(async client => {
+      const storage = client.environment.getStorage();
+
+      const key = 'KEYCLOAK_TOKEN';
+      const token = await storage.get(key);
+
+      if (token) {
+        console.log('keycloak token already exist:', token);
+        validateToken(token).then(validated => {
+          if (!validated) {
+            console.log('token expired, fetch from KeyCloak');
+            storage.unset(key);
+            getToken().then(token => {
+              console.log('token retrieved:', token);
+              storage.set(key, token);
+            });
+          }
+        });
+      } else {
+        console.log('keycloak token not yet exist, fetch from KeyCloak')
+        getToken().then(token => {
+          console.log('token retrieved:', token);
+          storage.set(key, token);
+        });
+      }
     })
     .then(() => {
       getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
       getPatientVaccination(8362196).then(vaccination => console.log('patient vaccination from panorama api', vaccination));
-    })
-    .then(() => {
-      getKeycloakToken().then(data => console.log(data))
     })
     .then(() => {
       root.render(
