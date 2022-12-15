@@ -4,10 +4,6 @@ const baseURL = 'http://localhost:8080/realms/cambianpanoramaviewer/protocol/ope
 const clientId = 'viewer';
 const clientSecret = 'IVibu4pEBBVbvoqpJvqHidPYe7xNkvsw';
 
-// KeyCloak user related - should represent practitioner
-const username = 'thomas-lee';
-const password = 'ThomasL@1121';
-
 // request headers specific for KeyCloak
 const headers = {
   'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -24,7 +20,7 @@ async function post(url = '', data = {}) {
   .then(response => response.json());
 }
 
-function getToken() {
+function getToken(username, password) {
   let url = baseURL + '/token';
   let data = {
     'client_id': clientId,

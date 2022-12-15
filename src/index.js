@@ -29,13 +29,16 @@ const smartLaunch = () => {
       const key = 'KEYCLOAK_TOKEN';
       const token = await storage.get(key);
 
+      // should be the KeyCloak user credential for practitioner launching the viewer
+      let username = 'thomas-lee';
+      let password = 'ThomasL@1121';
       if (token) {
         console.log('keycloak token already exist:', token);
         validateToken(token).then(validated => {
           if (!validated) {
             console.log('token expired, fetch from KeyCloak');
             storage.unset(key);
-            getToken().then(token => {
+            getToken(username, password).then(token => {
               console.log('token retrieved:', token);
               storage.set(key, token);
             });
@@ -43,7 +46,7 @@ const smartLaunch = () => {
         });
       } else {
         console.log('keycloak token not yet exist, fetch from KeyCloak')
-        getToken().then(token => {
+        getToken(username, password).then(token => {
           console.log('token retrieved:', token);
           storage.set(key, token);
         });
