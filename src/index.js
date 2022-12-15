@@ -7,15 +7,7 @@ import FHIR from 'fhirclient';
 import { getPatient, getPatientVaccination } from './utils/panoramaClient';
 import { getToken, validateToken } from './utils/keycloakClient';
 
-//import reportWebVitals from './reportWebVitals';
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
-//root.render(
-//  <React.StrictMode>
-//    <App />
-//  </React.StrictMode>
-//);
-//const rootElement = document.getElementById('root');
 
 const smartLaunch = () => {
   // Authorize application
@@ -67,13 +59,7 @@ const smartLaunch = () => {
           <App />
         </React.StrictMode>
       );
-      //ReactDOM.render(<App client={client} />, rootElement);
     });
 };
 
 smartLaunch();
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-//reportWebVitals();
