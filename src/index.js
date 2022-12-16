@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import FHIR from 'fhirclient';
 
-import { getPatient, getPatientVaccination } from './utils/panoramaClient';
+import { getPatient, getPatientVaccination, getUserRoles } from './utils/panoramaClient';
 import { getToken, validateToken } from './utils/keycloakClient';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -55,6 +55,7 @@ const smartLaunch = () => {
     .then(() => {
       getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
       getPatientVaccination(8362196).then(vaccination => console.log('patient vaccination from panorama api', vaccination));
+      getUserRoles('PERMISSIONS').then(roles => console.log('practitioner roles from panorama api', roles));
     })
     .then(() => {
       root.render(
