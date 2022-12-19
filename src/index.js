@@ -24,6 +24,7 @@ const smartLaunch = () => {
       return client;
     })
     .then(async client => {
+      // TODO: next version should use EMR FHIR storage
       const storage = client.environment.getStorage();
 
       const key = 'KEYCLOAK_TOKEN';
@@ -36,7 +37,8 @@ const smartLaunch = () => {
         console.log('keycloak token already exist:', token);
         validateToken(token).then(validated => {
           if (!validated) {
-            console.log('token expired, fetch from KeyCloak');
+            // TODO: might redirect to login page
+            console.log('token expired, fetch from KeyCloak (might redirect to login page first)');
             storage.unset(key);
             getToken(username, password).then(token => {
               console.log('token retrieved:', token);
@@ -45,17 +47,35 @@ const smartLaunch = () => {
           }
         });
       } else {
-        console.log('keycloak token not yet exist, fetch from KeyCloak')
+        // TODO: might redirect to login page
+        console.log('keycloak token not yet exist, fetch from KeyCloak (might redirect to login page first)')
         getToken(username, password).then(token => {
           console.log('token retrieved:', token);
           storage.set(key, token);
         });
       }
     })
+    .then(async () => {
+      // user should be the one from login page?
+      let user = 'PERMISSIONS';
+      let roles = await getUserRoles('PERMISSIONS');
+
+      // currently get the role from the first role in the list returned, might consider creating a specific role or ask during login
+      console.log('practitioner roles from panorama api', roles)
+      let role = roles[0].id;
+
+      // should be same as patient selected during practitioner login
+      let patient = 8362196;
+
+      getPatient(user, role, patient).then(patient => console.log('patient from panorama api', patient));
+      getPatientVaccination(user, role, patient).then(vaccination => console.log('patient vaccination from panorama api', vaccination));
+    })
     .then(() => {
-      getPatient(8362196).then(patient => console.log('patient from panorama api', patient));
-      getPatientVaccination(8362196).then(vaccination => console.log('patient vaccination from panorama api', vaccination));
-      getUserRoles('PERMISSIONS').then(roles => console.log('practitioner roles from panorama api', roles));
+      let url = 'https://postman-echo.com/';
+      fetch(url, {
+        method: 'GET'
+      })
+      .then(response => console.log('status code for ssl/tls connection to "https://postman-echo.com": ', response.status));
     })
     .then(() => {
       root.render(
