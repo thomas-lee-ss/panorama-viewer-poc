@@ -5,11 +5,41 @@ import App from './App';
 import FHIR from 'fhirclient';
 
 import { getPatient, getPatientVaccination, getUserRoles } from './utils/panoramaClient';
-import { getToken, validateToken } from './utils/keycloakClient';
+import { getToken, validateToken } from './utils/tokenClient';
+import { searchUser, deleteUser, createUser } from './utils/keycloakClient';
 
 const rootElement = document.getElementById('root');
 
 const https = require('https');
+
+async function fetchToken(client) {
+  // TODO: next version should use EMR FHIR storage
+  const storage = client.environment.getStorage();
+
+  const key = 'KEYCLOAK_TOKEN';
+  let token = await storage.get(key);
+
+  // should be the KeyCloak user credential for practitioner launching the viewer
+  let username = 'thomas-lee';
+  let password = 'ThomasL@1121';
+  if (token) {
+    const validated = await validateToken(token);
+    if (!validated) {
+      // TODO: might redirect to login page
+      storage.unset(key);
+      token = await getToken(username, password);
+      storage.set(key, token);
+    }
+  } else {
+    // TODO: might redirect to login page
+    token = await getToken(username, password);
+    storage.set(key, token);
+  }
+
+  return new Promise(resolve => {
+    resolve(token);
+  });
+}
 
 const smartLaunch = () => {
   // Authorize application
@@ -26,36 +56,29 @@ const smartLaunch = () => {
       return client;
     })
     .then(async client => {
-      // TODO: next version should use EMR FHIR storage
-      const storage = client.environment.getStorage();
+      const token = await fetchToken(client);
+      console.log('fetch access token', token);
 
-      const key = 'KEYCLOAK_TOKEN';
-      const token = await storage.get(key);
-
-      // should be the KeyCloak user credential for practitioner launching the viewer
-      let username = 'thomas-lee';
-      let password = 'ThomasL@1121';
-      if (token) {
-        console.log('keycloak token already exist:', token);
-        validateToken(token).then(validated => {
-          if (!validated) {
-            // TODO: might redirect to login page
-            console.log('token expired, fetch from KeyCloak (might redirect to login page first)');
-            storage.unset(key);
-            getToken(username, password).then(token => {
-              console.log('token retrieved:', token);
-              storage.set(key, token);
-            });
-          }
-        });
-      } else {
-        // TODO: might redirect to login page
-        console.log('keycloak token not yet exist, fetch from KeyCloak (might redirect to login page first)')
-        getToken(username, password).then(token => {
-          console.log('token retrieved:', token);
-          storage.set(key, token);
-        });
+      const demoUser = {
+        username: 'viewer-demo-user',
+        firstName: 'demo',
+        lastName: 'demo',
+        email: 'demouser@xyz.com',
+        enabled: true,
+        credentials: [{
+          type: 'password',
+          value: 'demo'
+        }]
       }
+
+      console.log('check if demo user exists in KeyCloak');
+      const userId = await searchUser(demoUser.username, token);
+      if (userId !== '') {
+        console.log('demo user already existed, try delete user from KeyCloak');
+        const success = await deleteUser(userId, token);
+        console.log('delete demo user successfully', success);
+      }
+      createUser(demoUser, token).then(success => console.log('create demo user successfully', success));
     })
     .then(async () => {
       // user should be the one from login page?
@@ -107,9 +130,11 @@ const smartLaunch = () => {
 
       // execute request
       console.log('execute request');
+      /*
       fetch(url, options)
       .then(response => response.json())
       .then(json => console.log('response', json));
+      */
     })
     .then(() => {
       ReactDOM.render(<App />, rootElement);

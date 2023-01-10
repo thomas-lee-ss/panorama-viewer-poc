@@ -1,48 +1,76 @@
-const baseURL = 'http://localhost:8080/realms/cambianpanoramaviewer/protocol/openid-connect';
+const baseURL = 'http://localhost:8080/admin/realms/cambianpanoramaviewer/users';
 
-// KeyCloak client related - should represent Cambian
-const clientId = 'viewer';
-const clientSecret = 'IVibu4pEBBVbvoqpJvqHidPYe7xNkvsw';
+function requestHeader(token) {
+  const headers = {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
 
-// request headers specific for KeyCloak
-const headers = {
-  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-  'Origin': 'http://localhost:3000/'
-};
+  return headers;
+}
 
-async function post(url = '', data = {}) {
-  let body = new URLSearchParams(data);
+async function get(url = '', headers = {}) {
   return fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: body
+    method: 'GET',
+    headers: headers
   })
   .then(response => response.json());
 }
 
-function getToken(username, password) {
-  let url = baseURL + '/token';
-  let data = {
-    'client_id': clientId,
-    'client_secret': clientSecret,
-    'grant_type': 'password',
-    'username': username,
-    'password': password
-  }
-
-  return post(url, data).then(data => data.access_token);
+async function post(url = '', data = {}, headers = {}) {
+  return fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return false;
+    }
+    return true;
+  });
 }
 
-function validateToken(token) {
-  let url = baseURL + '/token/introspect';
-  let data = {
-    'token': token,
-    'client_id': clientId,
-    'client_secret': clientSecret
-  }
-
-  return post(url, data).then(data => data.active);
+async function deleteReq(url = '', headers = {}) {
+  return fetch(url, {
+    method: 'DELETE',
+    headers: headers
+  })
+  .then(response => {
+    if (!response.ok) {
+      return false;
+    }
+    return true;
+  });
 }
 
-export { getToken, validateToken }
+/* search KeyCloak user by user name, return id if exist, empty string otherwise */
+function searchUser(username, token) {
+  let url = baseURL + '?username=' + username + '&exact=true';
+  let headers = requestHeader(token);
+
+  return get(url, headers)
+  .then(data => {
+    if (data.length === 1) {
+      return data[0].id
+    }
+    return '';
+  });
+}
+
+function deleteUser(userId, token) {
+  let url = baseURL + '/' + userId;
+  let headers = requestHeader(token);
+
+  return deleteReq(url, headers);
+}
+
+function createUser(user, token) {
+  let url = baseURL;
+  let headers = requestHeader(token);
+
+  return post(url, user, headers);
+}
+
+export { searchUser, createUser, deleteUser }
 
